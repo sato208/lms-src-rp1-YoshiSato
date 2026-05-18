@@ -1,6 +1,8 @@
 package jp.co.sss.lms.controller;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat; // 追加
+import java.util.Date;             // 追加
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,19 +35,48 @@ public class AttendanceController {
 	/**
 	 * 勤怠管理画面 初期表示
 	 * 
-	 * @param lmsUserId
-	 * @param courseId
 	 * @param model
 	 * @return 勤怠管理画面
 	 * @throws ParseException
 	 */
 	@RequestMapping(path = "/detail", method = RequestMethod.GET)
 	public String index(Model model) {
-
+		// ==========================================
 		// 勤怠一覧の取得
+		// ==========================================
+		
 		List<AttendanceManagementDto> attendanceManagementDtoList = studentAttendanceService
 				.getAttendanceManagement(loginUserDto.getCourseId(), loginUserDto.getLmsUserId());
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
+
+		// ==========================================
+		// 追加：過去日の未入力チェック
+		// ==========================================
+
+		// 1. SimpleDateFormatクラスでフォーマットパターンを設定し、現在日付を取得
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String currentDate = sdf.format(new Date());
+
+		// 2. 過去日の未入力状況を取得（Service経由でAPI呼び出し）
+		AttendanceManagementDto attendanceDto = studentAttendanceService.getMissingCount(
+		        loginUserDto.getLmsUserId(), 
+		        0, 
+		        currentDate
+		);
+
+		// ダイアログ表示フラグの初期値は false
+		boolean showPastMissingDialog = false;
+
+		// 3. 判定ロジックをシンプルに修正
+		// 取得したデータが存在し、かつ未入力カウント数が明確に 0 より大きい場合のみ true にする
+		if (attendanceDto != null && attendanceDto.getMissingCount() != null) {
+		    if (attendanceDto.getMissingCount() > 0) {
+		        showPastMissingDialog = true;
+		    }
+		}
+
+		// 4. 結果をModelにセット
+		model.addAttribute("showPastMissingDialog", showPastMissingDialog);
 
 		return "attendance/detail";
 	}

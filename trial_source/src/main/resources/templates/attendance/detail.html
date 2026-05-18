@@ -87,6 +87,38 @@
 			return hours + ':' + minutes;
 		}
 	</script>
+<!-- ★★★ ここからダイアログのコードを追加 ★★★ !-->
+	<th:block th:if="${showPastMissingDialog}">
+		
+		<div class="modal fade" id="pastMissingModal" tabindex="-1" aria-hidden="true" data-backdrop="static">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header bg-light" style="border-bottom: 1px solid #dee2e6; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                    <h5 class="modal-title text-warning d-flex align-items-center" style="font-weight: 600;">
+                        <span style="margin-right: 8px;">⚠️</span>未入力の確認
+                    </h5>
+                </div>
+					<div class="modal-body">
+						<p>過去日の勤怠に未入力があります。<br/>【勤怠情報を直接編集する】から、入力を行ってください。</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 画面が開いた瞬間に自動でダイアログを起動するJavaScript--> 
+		<script type="text/javascript">
+			$(function() {
+				// 画面に配置したモーダルを自動で表示する（Bootstrap 3/4のJQueryの書き方）
+				$('#pastMissingModal').modal('show');
+			});
+		</script>
+	</th:block>
+<!--★★★ ここまで追加 ★★★ -->
+
+
 
 </body>
 </html>

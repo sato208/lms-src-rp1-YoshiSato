@@ -21,11 +21,7 @@ public class AttendanceManagementDto extends StudentAttendanceDto {
 	private String blankTimeValue;
 	/** セクション名 */
 	private String sectionName;
-
-	// ★★★ 今回の要件のために追加するフィールド ★★★
-	/** 未入力件数 */
-	private Integer missingCount;
-
+	
 	
 
 }

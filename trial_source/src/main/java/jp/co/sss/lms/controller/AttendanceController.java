@@ -39,6 +39,8 @@ public class AttendanceController {
 	 * @return 勤怠管理画面
 	 * @throws ParseException
 	 */
+	
+	
 	@RequestMapping(path = "/detail", method = RequestMethod.GET)
 	public String index(Model model) {
 		// ==========================================
@@ -50,37 +52,28 @@ public class AttendanceController {
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
 		// ==========================================
-		// 追加：過去日の未入力チェック
+		// 追加：佐藤嘉俊Task.25-過去日が未入力の場合
 		// ==========================================
 
 		// 1. SimpleDateFormatクラスでフォーマットパターンを設定し、現在日付を取得
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String currentDate = sdf.format(new Date());
+		
+		// 2. 過去日の未入力状況を取得（Serviceの戻り値 booleanの結果）
+	    boolean showPastMissingDialog = studentAttendanceService.notEnterCheck(
+	            loginUserDto.getLmsUserId(), 
+	            0, 
+	            currentDate
+	    );
 
-		// 2. 過去日の未入力状況を取得（Service経由でAPI呼び出し）
-		AttendanceManagementDto attendanceDto = studentAttendanceService.getMissingCount(
-		        loginUserDto.getLmsUserId(), 
-		        0, 
-		        currentDate
-		);
-
-		// ダイアログ表示フラグの初期値は false
-		boolean showPastMissingDialog = false;
-
-		// 3. 判定ロジックをシンプルに修正
-		// 取得したデータが存在し、かつ未入力カウント数が明確に 0 より大きい場合のみ true にする
-		if (attendanceDto != null && attendanceDto.getMissingCount() != null) {
-		    if (attendanceDto.getMissingCount() > 0) {
-		        showPastMissingDialog = true;
-		    }
-		}
-
-		// 4. 結果をModelにセット
+		// 3. 結果をModelにセット
 		model.addAttribute("showPastMissingDialog", showPastMissingDialog);
-
+		//ここまで追加
+		
 		return "attendance/detail";
 	}
-
+	
+	
 	/**
 	 * 勤怠管理画面 『出勤』ボタン押下
 	 * 

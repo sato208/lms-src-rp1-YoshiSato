@@ -334,6 +334,7 @@ public class StudentAttendanceService {
 		return messageUtil.getMessage(Constants.PROP_KEY_ATTENDANCE_UPDATE_NOTICE);
 	}
 
+	
 	/**
 	 * 過去日の未入力勤怠状況チェック
 	 * 
@@ -342,66 +343,56 @@ public class StudentAttendanceService {
 	 * @param currentDateStr
 	 * @return 勤怠管理画面用DTO
 	 */
-	/**
-	 * 過去日の未入力勤怠状況チェック
-	 * 
-	 * @param String
-	 * @param deleteFlg
-	 * @param currentDateStr
-	 * @return 勤怠管理画面用DTO
-	 */
-	public AttendanceManagementDto getMissingCount(Integer String, int deleteFlg, String currentDateStr) {
-		
-		// 1. 返却用のDTOの箱を用意
-		AttendanceManagementDto resultDto = new AttendanceManagementDto();
-		resultDto.setMissingCount(0);
-		resultDto.setStatusDispName("");
+	
+	// ==========================================
+	// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
+	// ==========================================
 
-		// 型変換（共通Dto等からIntegerに安全に変換して取得）
-		Integer userId = loginUserDto.getLmsUserId();
-		Integer courseId = loginUserDto.getCourseId();
+	public boolean notEnterCheck(Integer studentId, int deleteFlg, String currentDateStr) {
+	    
+	    Integer userId = loginUserDto.getLmsUserId();
+	    Integer courseId = loginUserDto.getCourseId();
 
-		// 2. 勤怠一覧を取得
-		List<AttendanceManagementDto> list = tStudentAttendanceMapper
-				.getAttendanceManagement(courseId, userId, Constants.DB_FLG_FALSE);
+	    // 1. 勤怠一覧を取得
+	    List<AttendanceManagementDto> list = tStudentAttendanceMapper
+	            .getAttendanceManagement(courseId, userId, Constants.DB_FLG_FALSE);
 
-		if (list == null || list.isEmpty()) {
-			return resultDto;
-		}
+	    // mapperやDB接続不具合用（ガード句）
+	    if (list == null || list.isEmpty()) {
+	        return false;
+	    }
 
-		int missingCount = 0;
+	    // 2. 全データの中から「今日より過去」かつ「未入力（打刻漏れ）」のデータがあるか探す
+	    for (AttendanceManagementDto dto : list) {
+	        
+	        // yyyy-MM-dd の文字列に変換して比較
+	        String trainingDateStr = dateUtil.dateToString(dto.getTrainingDate(), "yyyy-MM-dd");
+	        
+	        // 現在日付（今日）より前の日付（過去日）のみを対象
+	        if (trainingDateStr != null && trainingDateStr.compareTo(currentDateStr) < 0) {
+	            
+	            // 遅刻早退区分（ステータス表示名）をEnumから判定
+	            AttendanceStatusEnum statusEnum = AttendanceStatusEnum.getEnum(dto.getStatus());
+	            String statusDispName = (statusEnum != null) ? statusEnum.name : "";
+	            
+	            //「欠席」の日は出退勤が空で正常なので、未入力チェックから除外する
+	            if ("欠席".equals(statusDispName)) {
+	                continue;
+	            }
+	            
+	            // 出勤時刻、または退勤時刻のどちらかが空（またはnull）の場合
+	            if (dto.getTrainingStartTime() == null || dto.getTrainingStartTime().equals("")
+	                    || dto.getTrainingEndTime() == null || dto.getTrainingEndTime().equals("")) {
+	                
+	                // 💡 1件でも未入力が見つかったら、「未入力あり（true）」を返す
+	                return true; 
+	            }
+	        }
+	    }
 
-		// 3. 全データの中から「今日より過去」かつ「未入力（打刻漏れ）」のデータをループで探す
-		for (AttendanceManagementDto dto : list) {
-			
-			// 研修日を yyyy-MM-dd の文字列に変換して比較
-			String trainingDateStr = dateUtil.dateToString(dto.getTrainingDate(), "yyyy-MM-dd");
-			
-			// 現在日付（今日）より前の日付（過去日）のみを対象とする
-			if (trainingDateStr != null && trainingDateStr.compareTo(currentDateStr) < 0) {
-				
-				// 遅刻早退区分（ステータス表示名）をEnumから判定
-				AttendanceStatusEnum statusEnum = AttendanceStatusEnum.getEnum(dto.getStatus());
-				String statusDispName = (statusEnum != null) ? statusEnum.name : "";
-				
-				//「欠席」の日は出退勤が空で正常なので、未入力チェックから除外する
-				if ("欠席".equals(statusDispName)) {
-					continue;
-				}
-				
-				//出勤時刻、または退勤時刻のどちらかが空（またはnull）の場合を「未入力（打刻漏れ）」とする
-				if (dto.getTrainingStartTime() == null || dto.getTrainingStartTime().equals("")
-						|| dto.getTrainingEndTime() == null || dto.getTrainingEndTime().equals("")) {
-					
-					missingCount++;
-				}
-			}
-		}
-
-		// 4. 集計した結果をDTOにセットして返す
-		resultDto.setMissingCount(missingCount);
-
-		return resultDto;
+	    return false;
 	}
+	
+	//ここまで追加
 	
 }

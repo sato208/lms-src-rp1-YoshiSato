@@ -371,7 +371,7 @@ public class StudentAttendanceService {
 	        // 現在日付（今日）より前の日付（過去日）のみを対象
 	        if (trainingDateStr != null && trainingDateStr.compareTo(currentDateStr) < 0) {
 	            
-	            // 遅刻早退区分（ステータス表示名）をEnumから判定
+	            // ステータス（遅刻早退欠勤区分）をEnumから判定
 	            AttendanceStatusEnum statusEnum = AttendanceStatusEnum.getEnum(dto.getStatus());
 	            String statusDispName = (statusEnum != null) ? statusEnum.name : "";
 	            
@@ -384,7 +384,7 @@ public class StudentAttendanceService {
 	            if (dto.getTrainingStartTime() == null || dto.getTrainingStartTime().equals("")
 	                    || dto.getTrainingEndTime() == null || dto.getTrainingEndTime().equals("")) {
 	                
-	                // 💡 1件でも未入力が見つかったら、「未入力あり（true）」を返す
+	                // 過去日に出勤退勤未入力が見つかったら、「未入力あり（true）」を返す
 	                return true; 
 	            }
 	        }

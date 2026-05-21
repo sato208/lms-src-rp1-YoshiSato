@@ -52,7 +52,7 @@ public class AttendanceController {
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
 		// ==========================================
-		// 追加：佐藤嘉俊Task.25-過去日が未入力の場合
+		// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
 		// ==========================================
 
 		// 1. SimpleDateFormatクラスでフォーマットパターンを設定し、現在日付を取得

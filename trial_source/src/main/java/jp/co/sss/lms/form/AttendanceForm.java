@@ -31,5 +31,14 @@ public class AttendanceForm {
 	private LinkedHashMap<Integer, String> blankTimes;
 	/** 日次の勤怠フォームリスト */
 	private List<DailyAttendanceForm> attendanceList;
+	
+	// ==========================================
+	// 追加：佐藤嘉俊-Task.26：時・分プルダウン用
+	// ==========================================
+	/** 出勤退勤時間(プルダウン) */
+	private LinkedHashMap<Integer, String> hourMap;
+	/** 出勤退勤分(プルダウン) */
+	private LinkedHashMap<Integer, String> minuteMap;
+	//ここまで追加
 
 }

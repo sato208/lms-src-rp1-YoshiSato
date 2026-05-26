@@ -1,8 +1,10 @@
 package jp.co.sss.lms.service;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -220,6 +222,27 @@ public class StudentAttendanceService {
 		attendanceForm.setLeaveFlg(loginUserDto.getLeaveFlg());
 		attendanceForm.setBlankTimes(attendanceUtil.setBlankTime());
 
+		// ==========================================
+		// 追加：-Task.26：時間・分プルダウン用のマップを生成
+		// ==========================================
+		// 1. 時間マップの生成 
+		LinkedHashMap<Integer, String> hourMap = new LinkedHashMap<>();
+		hourMap.put(null, "");
+		for (int i = 0; i < 24; i++) {
+			hourMap.put(i, String.format("%02d", i));
+		}
+		attendanceForm.setHourMap(hourMap);
+		
+		// 2. 分マップの生成 
+		LinkedHashMap<Integer, String> minuteMap = new LinkedHashMap<>();
+		minuteMap.put(null, "");
+		for (int i = 0; i < 60; i++) {
+			minuteMap.put(i, String.format("%02d", i));
+		}
+		attendanceForm.setMinuteMap(minuteMap);
+		//ここまで追加
+		
+		
 		// 途中退校している場合のみ設定
 		if (loginUserDto.getLeaveDate() != null) {
 			attendanceForm
@@ -238,6 +261,34 @@ public class StudentAttendanceService {
 			dailyAttendanceForm
 					.setTrainingStartTime(attendanceManagementDto.getTrainingStartTime());
 			dailyAttendanceForm.setTrainingEndTime(attendanceManagementDto.getTrainingEndTime());
+			
+			
+			// ==========================================
+			// 追加：-Task.26：時刻を「時」「分」に分割してセット
+			// ==========================================
+			// 1. 出勤時刻の分割 ("09:15" -> 9 と 15)
+			String startTimeString = attendanceManagementDto.getTrainingStartTime();
+			if (startTimeString != null && startTimeString.contains(":")) {
+				String[] parts = startTimeString.split(":");
+				dailyAttendanceForm.setTrainingStartTimeHour(Integer.parseInt(parts[0].trim()));
+				dailyAttendanceForm.setTrainingStartTimeMinute(Integer.parseInt(parts[1].trim()));
+			} else {
+					dailyAttendanceForm.setTrainingStartTimeHour(null);
+					dailyAttendanceForm.setTrainingStartTimeMinute(null);
+			}
+
+			// 2. 退勤時刻の分割 ("18:00" -> 18 と 0)
+			String endTimeString = attendanceManagementDto.getTrainingEndTime();
+			if (endTimeString != null && endTimeString.contains(":")) {
+				String[] parts = endTimeString.split(":");
+				dailyAttendanceForm.setTrainingEndTimeHour(Integer.parseInt(parts[0].trim()));
+				dailyAttendanceForm.setTrainingEndTimeMinute(Integer.parseInt(parts[1].trim()));
+			} else {
+				dailyAttendanceForm.setTrainingEndTimeHour(null);
+				dailyAttendanceForm.setTrainingEndTimeMinute(null);
+			}
+			//ここまで追加
+			
 			if (attendanceManagementDto.getBlankTime() != null) {
 				dailyAttendanceForm.setBlankTime(attendanceManagementDto.getBlankTime());
 				dailyAttendanceForm.setBlankTimeValue(String.valueOf(
@@ -337,62 +388,30 @@ public class StudentAttendanceService {
 	
 	/**
 	 * 過去日の未入力勤怠状況チェック
-	 * 
-	 * @param String
-	 * @param deleteFlg
-	 * @param currentDateStr
-	 * @return 勤怠管理画面用DTO
+	 * @author 佐藤
+	 * @return 未入力日の有無
+	 * @throws ParseException
 	 */
 	
 	// ==========================================
-	// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
+	// 追加：-Task.25-過去日が未入力の場合
 	// ==========================================
-
-	public boolean notEnterCheck(Integer studentId, int deleteFlg, String currentDateStr) {
-	    
-	    Integer userId = loginUserDto.getLmsUserId();
-	    Integer courseId = loginUserDto.getCourseId();
-
-	    // 1. 勤怠一覧を取得
-	    List<AttendanceManagementDto> list = tStudentAttendanceMapper
-	            .getAttendanceManagement(courseId, userId, Constants.DB_FLG_FALSE);
-
-	    // mapperやDB接続不具合用（ガード句）
-	    if (list == null || list.isEmpty()) {
-	        return false;
-	    }
-
-	    // 2. 全データの中から「今日より過去」かつ「未入力（打刻漏れ）」のデータがあるか探す
-	    for (AttendanceManagementDto dto : list) {
-	        
-	        // yyyy-MM-dd の文字列に変換して比較
-	        String trainingDateStr = dateUtil.dateToString(dto.getTrainingDate(), "yyyy-MM-dd");
-	        
-	        // 現在日付（今日）より前の日付（過去日）のみを対象
-	        if (trainingDateStr != null && trainingDateStr.compareTo(currentDateStr) < 0) {
-	            
-	            // ステータス（遅刻早退欠勤区分）をEnumから判定
-	            AttendanceStatusEnum statusEnum = AttendanceStatusEnum.getEnum(dto.getStatus());
-	            String statusDispName = (statusEnum != null) ? statusEnum.name : "";
-	            
-	            //「欠席」の日は出退勤が空で正常なので、未入力チェックから除外する
-	            if ("欠席".equals(statusDispName)) {
-	                continue;
-	            }
-	            
-	            // 出勤時刻、または退勤時刻のどちらかが空（またはnull）の場合
-	            if (dto.getTrainingStartTime() == null || dto.getTrainingStartTime().equals("")
-	                    || dto.getTrainingEndTime() == null || dto.getTrainingEndTime().equals("")) {
-	                
-	                // 過去日に出勤退勤未入力が見つかったら、「未入力あり（true）」を返す
-	                return true; 
-	            }
-	        }
-	    }
-
-	    return false;
-	}
 	
-	//ここまで追加
+	public Boolean notEnterCheck() throws ParseException {
+		// 現在の日付を取得してフォーマットする
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		String currentDateString = sdf.format(new Date());
+		Date currentDate = sdf.parse(currentDateString);
+		
+		// tStudentAttendanceMapper.notEnterCheck を呼び出し、未入力件数を取得する
+		Integer notEnterCount = tStudentAttendanceMapper.notEnterCheck(loginUserDto.getLmsUserId(),Constants.DB_FLG_FALSE, currentDate);
+
+		// 件数が 0 より大きければ true、そうでなければ false を戻す
+		if (notEnterCount > 0) {
+			return true;
+		}
+
+		return false;
+	}
 	
 }

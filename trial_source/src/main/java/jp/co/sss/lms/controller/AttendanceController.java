@@ -1,8 +1,6 @@
 package jp.co.sss.lms.controller;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat; // 追加
-import java.util.Date;             // 追加
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import jp.co.sss.lms.dto.AttendanceManagementDto;
 import jp.co.sss.lms.dto.LoginUserDto;
 import jp.co.sss.lms.form.AttendanceForm;
+import jp.co.sss.lms.form.DailyAttendanceForm;
 import jp.co.sss.lms.service.StudentAttendanceService;
 import jp.co.sss.lms.util.Constants;
 
@@ -42,7 +41,7 @@ public class AttendanceController {
 	
 	
 	@RequestMapping(path = "/detail", method = RequestMethod.GET)
-	public String index(Model model) {
+	public String index(Model model) throws ParseException{
 		// ==========================================
 		// 勤怠一覧の取得
 		// ==========================================
@@ -51,24 +50,17 @@ public class AttendanceController {
 				.getAttendanceManagement(loginUserDto.getCourseId(), loginUserDto.getLmsUserId());
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
-		// ==========================================
-		// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
-		// ==========================================
+//		// ==========================================
+//		// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
+//		// ==========================================
+//
 
-		// 1. SimpleDateFormatクラスでフォーマットパターンを設定し、現在日付を取得
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		String currentDate = sdf.format(new Date());
-		
-		// 2. 過去日の未入力状況を取得（Serviceの戻り値 booleanの結果）
-	    boolean showPastMissingDialog = studentAttendanceService.notEnterCheck(
-	            loginUserDto.getLmsUserId(), 
-	            0, 
-	            currentDate
-	    );
+		Boolean isPastMissing = null;
+		isPastMissing = studentAttendanceService.notEnterCheck();
 
-		// 3. 結果をModelにセット
-		model.addAttribute("showPastMissingDialog", showPastMissingDialog);
-		//ここまで追加
+//		// 3. 結果をModelにセット
+		model.addAttribute("showPastMissingDialog", isPastMissing);
+//		//ここまで追加
 		
 		return "attendance/detail";
 	}
@@ -156,7 +148,29 @@ public class AttendanceController {
 	@RequestMapping(path = "/update", params = "complete", method = RequestMethod.POST)
 	public String complete(AttendanceForm attendanceForm, Model model, BindingResult result)
 			throws ParseException {
-
+		
+		// ==========================================
+		// 追加：-Task.26：プルダウンの「時・分」を「HH:mm」に結合してセット
+		// ==========================================
+		if (attendanceForm.getAttendanceList() != null) {
+			for (DailyAttendanceForm form : attendanceForm.getAttendanceList()) {
+				// 出勤時間の結合
+				if (form.getTrainingStartTimeHour() != null && form.getTrainingStartTimeMinute() != null) {
+					form.setTrainingStartTime(String.format("%02d:%02d", form.getTrainingStartTimeHour(), form.getTrainingStartTimeMinute()));
+				} else {
+					form.setTrainingStartTime(null);
+				}
+				// 退勤時間の結合
+				if (form.getTrainingEndTimeHour() != null && form.getTrainingEndTimeMinute() != null) {
+					form.setTrainingEndTime(String.format("%02d:%02d", form.getTrainingEndTimeHour(), form.getTrainingEndTimeMinute()));
+				} else {
+					form.setTrainingEndTime(null);
+				}
+			}
+		}
+		// ここまで追加
+		
+		
 		// 更新
 		String message = studentAttendanceService.update(attendanceForm);
 		model.addAttribute("message", message);

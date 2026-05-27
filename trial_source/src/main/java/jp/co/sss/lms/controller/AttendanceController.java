@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import jp.co.sss.lms.dto.AttendanceManagementDto;
 import jp.co.sss.lms.dto.LoginUserDto;
 import jp.co.sss.lms.form.AttendanceForm;
-import jp.co.sss.lms.form.DailyAttendanceForm;
 import jp.co.sss.lms.service.StudentAttendanceService;
+import jp.co.sss.lms.util.AttendanceUtil;
 import jp.co.sss.lms.util.Constants;
 
 /**
@@ -25,7 +25,8 @@ import jp.co.sss.lms.util.Constants;
 @Controller
 @RequestMapping("/attendance")
 public class AttendanceController {
-
+	@Autowired
+    private AttendanceUtil attendanceUtil;
 	@Autowired
 	private StudentAttendanceService studentAttendanceService;
 	@Autowired
@@ -38,34 +39,32 @@ public class AttendanceController {
 	 * @return 勤怠管理画面
 	 * @throws ParseException
 	 */
-	
-	
+
 	@RequestMapping(path = "/detail", method = RequestMethod.GET)
-	public String index(Model model) throws ParseException{
+	public String index(Model model) throws ParseException {
 		// ==========================================
 		// 勤怠一覧の取得
 		// ==========================================
-		
+
 		List<AttendanceManagementDto> attendanceManagementDtoList = studentAttendanceService
 				.getAttendanceManagement(loginUserDto.getCourseId(), loginUserDto.getLmsUserId());
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
-//		// ==========================================
-//		// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
-//		// ==========================================
-//
+		//		// ==========================================
+		//		// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
+		//		// ==========================================
+		//
 
 		Boolean isPastMissing = null;
 		isPastMissing = studentAttendanceService.notEnterCheck();
 
-//		// 3. 結果をModelにセット
+		//		// 3. 結果をModelにセット
 		model.addAttribute("showPastMissingDialog", isPastMissing);
-//		//ここまで追加
-		
+		//		//ここまで追加
+
 		return "attendance/detail";
 	}
-	
-	
+
 	/**
 	 * 勤怠管理画面 『出勤』ボタン押下
 	 * 
@@ -148,29 +147,14 @@ public class AttendanceController {
 	@RequestMapping(path = "/update", params = "complete", method = RequestMethod.POST)
 	public String complete(AttendanceForm attendanceForm, Model model, BindingResult result)
 			throws ParseException {
-		
-		// ==========================================
-		// 追加：-Task.26：プルダウンの「時・分」を「HH:mm」に結合してセット
-		// ==========================================
-		if (attendanceForm.getAttendanceList() != null) {
-			for (DailyAttendanceForm form : attendanceForm.getAttendanceList()) {
-				// 出勤時間の結合
-				if (form.getTrainingStartTimeHour() != null && form.getTrainingStartTimeMinute() != null) {
-					form.setTrainingStartTime(String.format("%02d:%02d", form.getTrainingStartTimeHour(), form.getTrainingStartTimeMinute()));
-				} else {
-					form.setTrainingStartTime(null);
-				}
-				// 退勤時間の結合
-				if (form.getTrainingEndTimeHour() != null && form.getTrainingEndTimeMinute() != null) {
-					form.setTrainingEndTime(String.format("%02d:%02d", form.getTrainingEndTimeHour(), form.getTrainingEndTimeMinute()));
-				} else {
-					form.setTrainingEndTime(null);
-				}
-			}
-		}
-		// ここまで追加
-		
-		
+
+		//======================================================
+		// 追加-Task.26-formatConversion呼び出し
+		//======================================================
+		// formatConversionの呼び出し
+		studentAttendanceService.formatConversion(attendanceForm);
+
+
 		// 更新
 		String message = studentAttendanceService.update(attendanceForm);
 		model.addAttribute("message", message);

@@ -105,17 +105,17 @@
 	</update>
 
 
-	<select id="notEnterCheck" resultType="java.lang.Integer">
+	<select id="notEnterCount" resultType="java.lang.Integer">
 		SELECT COUNT(*)
-		FROM t_student_attendance t3
-		WHERE t3.lms_user_id = #{lmsUserId}
-		AND t3.delete_flg = #{deleteFlg}
-		AND t3.training_date &lt; #{trainingDate}
-		AND t3.status != '1'
+		FROM t_student_attendance
+		WHERE lms_user_id = #{lmsUserId}
+		AND delete_flg = #{deleteFlg}
+		AND training_date &lt; #{trainingDate}
+		AND status != '1'
 		AND (
-		t3.training_start_time = '' OR t3.training_end_time = ''
-		OR t3.training_start_time IS NULL
-		OR t3.training_end_time IS NULL
+		training_start_time = '' OR training_end_time = ''
+		OR training_start_time IS NULL
+		OR training_end_time IS NULL
 		)
 	</select>
 

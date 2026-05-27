@@ -232,7 +232,7 @@ public class StudentAttendanceService {
 			hourMap.put(i, String.format("%02d", i));
 		}
 		attendanceForm.setHourMap(hourMap);
-		
+
 		// 2. 分マップの生成 
 		LinkedHashMap<Integer, String> minuteMap = new LinkedHashMap<>();
 		minuteMap.put(null, "");
@@ -241,8 +241,7 @@ public class StudentAttendanceService {
 		}
 		attendanceForm.setMinuteMap(minuteMap);
 		//ここまで追加
-		
-		
+
 		// 途中退校している場合のみ設定
 		if (loginUserDto.getLeaveDate() != null) {
 			attendanceForm
@@ -261,8 +260,7 @@ public class StudentAttendanceService {
 			dailyAttendanceForm
 					.setTrainingStartTime(attendanceManagementDto.getTrainingStartTime());
 			dailyAttendanceForm.setTrainingEndTime(attendanceManagementDto.getTrainingEndTime());
-			
-			
+
 			// ==========================================
 			// 追加：-Task.26：時刻を「時」「分」に分割してセット
 			// ==========================================
@@ -273,8 +271,8 @@ public class StudentAttendanceService {
 				dailyAttendanceForm.setTrainingStartTimeHour(Integer.parseInt(parts[0].trim()));
 				dailyAttendanceForm.setTrainingStartTimeMinute(Integer.parseInt(parts[1].trim()));
 			} else {
-					dailyAttendanceForm.setTrainingStartTimeHour(null);
-					dailyAttendanceForm.setTrainingStartTimeMinute(null);
+				dailyAttendanceForm.setTrainingStartTimeHour(null);
+				dailyAttendanceForm.setTrainingStartTimeMinute(null);
 			}
 
 			// 2. 退勤時刻の分割 ("18:00" -> 18 と 0)
@@ -288,7 +286,7 @@ public class StudentAttendanceService {
 				dailyAttendanceForm.setTrainingEndTimeMinute(null);
 			}
 			//ここまで追加
-			
+
 			if (attendanceManagementDto.getBlankTime() != null) {
 				dailyAttendanceForm.setBlankTime(attendanceManagementDto.getBlankTime());
 				dailyAttendanceForm.setBlankTimeValue(String.valueOf(
@@ -306,6 +304,33 @@ public class StudentAttendanceService {
 		}
 
 		return attendanceForm;
+	}
+
+	public void formatConversion(AttendanceForm attendanceForm) {
+		for (DailyAttendanceForm dailyAttendanceForm : attendanceForm.getAttendanceList()) {
+
+			// [if 出勤の「時」「分」が共に入力されている場合] 
+			if (dailyAttendanceForm.getTrainingStartTimeHour() != null
+					&& dailyAttendanceForm.getTrainingStartTimeMinute() != null) {
+
+				// %02d:%02d 形式で trainingStartTime にセットする。
+				String startTime = String.format("%02d:%02d",
+						dailyAttendanceForm.getTrainingStartTimeHour(),
+						dailyAttendanceForm.getTrainingStartTimeMinute());
+				dailyAttendanceForm.setTrainingStartTime(startTime);
+			}
+			// [if 退勤の「時」「分」が共に入力されている場合] 
+			if (dailyAttendanceForm.getTrainingEndTimeHour() != null
+					&& dailyAttendanceForm.getTrainingEndTimeMinute() != null) {
+
+				// %02d:%02d 形式で trainingEndTime にセットする。
+				String endTime = String.format("%02d:%02d",
+						dailyAttendanceForm.getTrainingEndTimeHour(),
+						dailyAttendanceForm.getTrainingEndTimeMinute());
+				dailyAttendanceForm.setTrainingEndTime(endTime);
+			}
+		}
+
 	}
 
 	/**
@@ -385,26 +410,26 @@ public class StudentAttendanceService {
 		return messageUtil.getMessage(Constants.PROP_KEY_ATTENDANCE_UPDATE_NOTICE);
 	}
 
-	
 	/**
 	 * 過去日の未入力勤怠状況チェック
 	 * @author 佐藤
 	 * @return 未入力日の有無
 	 * @throws ParseException
 	 */
-	
+
 	// ==========================================
 	// 追加：-Task.25-過去日が未入力の場合
 	// ==========================================
-	
+
 	public Boolean notEnterCheck() throws ParseException {
 		// 現在の日付を取得してフォーマットする
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		String currentDateString = sdf.format(new Date());
 		Date currentDate = sdf.parse(currentDateString);
-		
+
 		// tStudentAttendanceMapper.notEnterCheck を呼び出し、未入力件数を取得する
-		Integer notEnterCount = tStudentAttendanceMapper.notEnterCheck(loginUserDto.getLmsUserId(),Constants.DB_FLG_FALSE, currentDate);
+		Integer notEnterCount = tStudentAttendanceMapper.notEnterCount(loginUserDto.getLmsUserId(),
+				Constants.DB_FLG_FALSE, currentDate);
 
 		// 件数が 0 より大きければ true、そうでなければ false を戻す
 		if (notEnterCount > 0) {
@@ -413,5 +438,5 @@ public class StudentAttendanceService {
 
 		return false;
 	}
-	
+
 }

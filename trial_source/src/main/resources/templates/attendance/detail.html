@@ -43,7 +43,7 @@
 	</th:block>
 
 
-	<!-- 修正：-Task.29 一覧スクロールの表示!-->
+	<!-- 追加：佐藤嘉俊-Task.29 一覧スクロールの表示!-->
 	<div class="row">
 		<div class="bs-component col-sm-12">
 			<div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
@@ -79,39 +79,7 @@
 			</div>
 		</div>
 	</div>
-	<!-- 修正：-Task.29 一覧スクロールの表示 
-	<div class="row">
-		<div class="bs-component col-sm-12">
-			<table class="table table-hover dataTable no-footer">
-				<thead class="db">
-					<tr>
-						<th class="w160">日付</th>
-						<th class="w260">コース内容</th>
-						<th class="w80">出勤</th>
-						<th class="w80">退勤</th>
-						<th class="w120">中抜け時間</th>
-						<th class="w120">ステータス</th>
-						<th class="w200">備考</th>
-					</tr>
-				</thead>
 
-				<tbody class="db">
-					<th:block th:each="attendanceManagementDto : ${attendanceManagementDtoList}" th:object="${attendanceManagementDto}">
-						<tr>
-							<td class="w160">[[*{#dates.format(trainingDate, 'yyyy年M月d日(E)')}]]</td>
-							<td class="w260">[[*{sectionName}]]</td>
-							<td class="w80">[[*{trainingStartTime}]]</td>
-							<td class="w80">[[*{trainingEndTime}]]</td>
-							<td class="w120">[[*{blankTimeValue}]]</td>
-							<td class="w120">[[*{statusDispName}]]</td>
-							<td class="w200">[[*{note}]]</td>
-						</tr>
-					</th:block>
-				</tbody>
-			</table>
-		</div>
-	</div>
-	!-->
 
 	<script type="text/javascript" th:inline="javascript">
 		$(function () {
@@ -127,7 +95,7 @@
 			return hours + ':' + minutes;
 		}
 	</script>
-	<!-- 追加：-Task.25-過去日が未入力の場合のダイアログの表示を追加 !-->
+	<!-- 追加：佐藤嘉俊-Task.25-過去日が未入力の場合のダイアログの表示を追加 !-->
 	<th:block th:if="${showPastMissingDialog}">
 
 		<div class="modal fade" id="pastMissingModal" tabindex="-1" aria-hidden="true" data-backdrop="static">

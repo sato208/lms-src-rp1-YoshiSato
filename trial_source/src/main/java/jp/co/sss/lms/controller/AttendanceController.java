@@ -149,7 +149,7 @@ public class AttendanceController {
 			throws ParseException {
 
 		//======================================================
-		// 追加-Task.26-formatConversion呼び出し
+		// 追加-佐藤:Task.26-formatConversion呼び出し
 		//======================================================
 		// formatConversionの呼び出し
 		studentAttendanceService.formatConversion(attendanceForm);

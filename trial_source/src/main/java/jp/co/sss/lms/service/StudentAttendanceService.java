@@ -223,7 +223,7 @@ public class StudentAttendanceService {
 		attendanceForm.setBlankTimes(attendanceUtil.setBlankTime());
 
 		// ==========================================
-		// 追加：-Task.26：時間・分プルダウン用のマップを生成
+		// 追加：佐藤嘉俊-Task.26：時間・分プルダウン用のマップを生成
 		// ==========================================
 		// 1. 時間マップの生成 
 		LinkedHashMap<Integer, String> hourMap = new LinkedHashMap<>();
@@ -262,7 +262,7 @@ public class StudentAttendanceService {
 			dailyAttendanceForm.setTrainingEndTime(attendanceManagementDto.getTrainingEndTime());
 
 			// ==========================================
-			// 追加：-Task.26：時刻を「時」「分」に分割してセット
+			// 追加：佐藤嘉俊-Task.26：時刻を「時」「分」に分割してセット
 			// ==========================================
 			// 1. 出勤時刻の分割 ("09:15" -> 9 と 15)
 			String startTimeString = attendanceManagementDto.getTrainingStartTime();
@@ -305,7 +305,12 @@ public class StudentAttendanceService {
 
 		return attendanceForm;
 	}
-
+	/**
+	 * 出退勤入力（時間と分）フォーム
+	 * @author 佐藤嘉俊
+	 * @param attendanceForm
+	 * @return 出退勤入力（時間と分）フォーム
+	 */
 	public void formatConversion(AttendanceForm attendanceForm) {
 		for (DailyAttendanceForm dailyAttendanceForm : attendanceForm.getAttendanceList()) {
 
@@ -412,13 +417,13 @@ public class StudentAttendanceService {
 
 	/**
 	 * 過去日の未入力勤怠状況チェック
-	 * @author 佐藤
+	 * @author 佐藤嘉俊
 	 * @return 未入力日の有無
 	 * @throws ParseException
 	 */
 
 	// ==========================================
-	// 追加：-Task.25-過去日が未入力の場合
+	// 追加：佐藤嘉俊-Task.25-過去日が未入力の場合
 	// ==========================================
 
 	public Boolean notEnterCheck() throws ParseException {
